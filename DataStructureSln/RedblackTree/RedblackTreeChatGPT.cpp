@@ -365,12 +365,17 @@ int main() {
     for ( int i = 0; i < sizeof(arr) / sizeof(int); ++i )
         {
         insert( tree, arr[i]);
+
+        printTree( tree->root, 0 );
+        cout << "===============================================" << "inserted value: "<< arr[i] << "===================\n" << endl;
+        printf("Sum of values less than %d: %d\n", 18, getSumLessThan(tree->root, 18) );
+
+        cout << "===============================================" << endl;
         }
 
-    printTree( tree->root, 0 );
+    //printTree( tree->root, 0 );
 
-
-    cout << "===============================================" << endl;
+    /*cout << "===============================================" << endl;
     for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
         printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
@@ -389,7 +394,7 @@ int main() {
 
     for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
         printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
-    }
+    }*/
 
     /*cout << "============delete the value 5===============" << endl;
     deleteNode(tree, 5);
