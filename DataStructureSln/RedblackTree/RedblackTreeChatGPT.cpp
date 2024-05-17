@@ -11,15 +11,9 @@ using namespace std;
 // Define the colors for Red-Black Tree
 typedef enum { RED, BLACK } Color;
 
-typedef struct NodeData {
-    int deadline;
-    int exe_time;
-
-}NodeData;
-
 // Node structure
 typedef struct Node {
-    NodeData* data;
+    int data;
     int sum_left;
     Color color;
     struct Node *left, *right, *parent;
@@ -31,32 +25,22 @@ typedef struct RBTree {
 } RBTree;
 
 // Function prototypes
-NodeData* createNodeData(int deadline, int exe_time);
-Node* createNode(NodeData* data, Color color, Node* left, Node* right, Node* parent);
+Node* createNode(int data, Color color, Node* left, Node* right, Node* parent);
 RBTree* createTree();
 void leftRotate(RBTree *tree, Node *x);
 void rightRotate(RBTree *tree, Node *x);
 void insertFixup(RBTree *tree, Node *z);
-void insert(RBTree *tree, NodeData* data);
-Node* search(RBTree *tree, NodeData* data);
+void insert(RBTree *tree, int data);
+Node* search(RBTree *tree, int data);
 void transplant(RBTree *tree, Node *u, Node *v);
 Node* minimum(Node *node);
 void deleteFixup(RBTree *tree, Node *x);
 void removeNode(RBTree *tree, Node *z);
-void deleteNode(RBTree *tree, NodeData* data);
+void deleteNode(RBTree *tree, int data);
 void inorder(Node *node);
 void destroyTree(Node *node);
 
-
-NodeData* createNodeData(int deadline, int exe_time){
-    NodeData* data = (NodeData*)malloc(sizeof(NodeData));
-    data->deadline = deadline;
-    data->exe_time = exe_time;
-
-    return data;
-}
-
-Node* createNode(NodeData* data, Color color, Node* left, Node* right, Node* parent) {
+Node* createNode(int data, Color color, Node* left, Node* right, Node* parent) {
     Node* newNode = (Node*)malloc(sizeof(Node));
     newNode->data = data;
     newNode->color = color;
@@ -83,7 +67,7 @@ void leftRotate(RBTree *tree, Node *x) {
     else x->parent->right = y;
     y->left = x;
     x->parent = y;
-    y->sum_left += x->data->exe_time + x->sum_left;
+    y->sum_left += x->data + x->sum_left;
 }
 
 void rightRotate(RBTree *tree, Node *x) {
@@ -93,7 +77,7 @@ void rightRotate(RBTree *tree, Node *x) {
     int new_sum_left = 0;
     if (y->right != NULL) {
         y->right->parent = x;
-        new_sum_left = y->right->data->exe_time + y->right->sum_left;
+        new_sum_left = y->right->data + y->right->sum_left;
     }
     x->sum_left = new_sum_left;
     y->parent = x->parent;
@@ -143,14 +127,14 @@ void insertFixup(RBTree *tree, Node *z) {
     tree->root->color = BLACK;
 }
 
-void insert(RBTree *tree, NodeData* data) {
+void insert(RBTree *tree, int data) {
     Node *z = createNode(data, RED, NULL, NULL, NULL);
     Node *y = NULL;
     Node *x = tree->root;
     while (x != NULL) {
         y = x;
-        if (z->data->deadline < x->data->deadline) {
-            x->sum_left += z->data->exe_time;
+        if (z->data < x->data) {
+            x->sum_left += z->data;
             x = x->left;
         }
         else {
@@ -159,43 +143,35 @@ void insert(RBTree *tree, NodeData* data) {
     }
 
     z->parent = y;
-    if (y == NULL) {
-        tree->root = z;
-    }
-    else if (z->data->deadline < y->data->deadline) {
-        y->left = z;
-    }
-    else {
-        y->right = z;
-    }
-
+    if (y == NULL) tree->root = z;
+    else if (z->data < y->data) y->left = z;
+    else y->right = z;
     insertFixup(tree, z);
 }
 
-int getSumLessThan(Node* root, int deadline){
-    if ( root == NULL ) {
+int getSumLessThan(Node* root, int key){
+    if (root == NULL) {
         return 0;
     }
-    if ( deadline == root->data->deadline ) {
+    if (key == root->data) {
         return root->sum_left;
     }
-    else if ( deadline < root->data->deadline ) {
-        return getSumLessThan(root->left, deadline);
+    else if (key < root->data) {
+        return getSumLessThan(root->left, key);
     }
     else {
-        return  root->data->exe_time + root->sum_left + getSumLessThan(root->right, deadline );
+        return  root->data + root->sum_left + getSumLessThan(root->right, key);
     }
 
 }
 
 
-Node* search(RBTree *tree, NodeData* data) {
+Node* search(RBTree *tree, int data) {
     Node *current = tree->root;
-    while (current != NULL && current->data->deadline != data->deadline ) {
-        if (data->deadline < current->data->deadline) current = current->left;
+    while (current != NULL && current->data != data) {
+        if (data < current->data) current = current->left;
         else current = current->right;
     }
-
     return current;
 }
 
@@ -280,7 +256,15 @@ void removeNode(RBTree *tree, Node *z) {
 
     if ( z->left != NULL && z->right != NULL ) {
         y = minimum(z->right);
-        NodeData* remove_data = z->data;
+
+        int diff = y->data - z->data;
+        Node* cur = z->right;
+        while (cur != y){
+            cur->sum_left -= diff;
+            cur = cur->left;
+        }
+
+        int remove_data = z->data;
         z->data = y->data;
         y->data = remove_data;
 
@@ -296,7 +280,7 @@ void removeNode(RBTree *tree, Node *z) {
     while (p != NULL) {
         if (p->left == current)
         {
-            p->sum_left -= z->data->exe_time;
+            p->sum_left -= z->data;
         }
         current = p;
         p = current->parent;
@@ -310,15 +294,31 @@ void removeNode(RBTree *tree, Node *z) {
         x = z->left;
         transplant(tree, z, z->left);
 
-    }
+    } /*else {
+        y = minimum(z->right);
+        y_original_color = y->color;
+        x = y->right;
+        if (y->parent == z) {
+            if (x != NULL) x->parent = y;
+        } else {
+            transplant(tree, y, y->right);
+            y->right = z->right;
+            z->right->parent = y;
+        }
+        transplant(tree, z, y);
+        y->left = z->left;
+        z->left->parent = y;
+        y->color = z->color;
+    }*/
 
     free(z);
     if (y_original_color == BLACK) {
         deleteFixup(tree, x);
     }
+
 }
 
-void deleteNode(RBTree *tree, NodeData* data) {
+void deleteNode(RBTree *tree, int data) {
     Node *z = search(tree, data);
     if (z != NULL) {
         removeNode(tree, z);
@@ -328,7 +328,7 @@ void deleteNode(RBTree *tree, NodeData* data) {
 void inorder(Node *node) {
     if (node != NULL) {
         inorder(node->left);
-        printf("%d ", node->data->deadline);
+        printf("%d ", node->data);
         inorder(node->right);
     }
 }
@@ -338,7 +338,6 @@ void destroyTree(Node *node) {
         destroyTree(node->left);
         destroyTree(node->right);
         free(node);
-
     }
 }
 
@@ -350,7 +349,7 @@ void printTree(Node* root, int space) {
         std::cout << std::endl;
         for (int i = 10; i < space; i++)
             std::cout << " ";
-        std::cout << root->data->deadline << std::endl;
+        std::cout << root->data << std::endl;
         printTree(root->left, space);
     }
 }
@@ -360,82 +359,82 @@ int main() {
     cout << "============Test the program from ChatGPT===============" << endl;
 
     RBTree *tree = createTree();
-    const int size = 9;
-    int keys[] = { 9, 8, 7, 6, 5, 4, 3, 2, 1 }; //{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    int vals[] = { 9, 8, 7, 6, 5, 4, 3, 2, 1 }; //{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    NodeData* arr[size];
 
-    for ( int i = 0; i < size; ++i )
+    int arr[] = {21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 }; //{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+    for ( int i = 0; i < sizeof(arr) / sizeof(int); ++i )
         {
-        arr[i] = createNodeData(keys[i], vals[i]);
-        insert( tree, arr[i] );
+        insert( tree, arr[i]);
         }
 
     printTree( tree->root, 0 );
 
+
     cout << "===============================================" << endl;
-    for (int i = 0; i < size; i++) {
-        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    }
+
+    cout << "============delete the value 10===============" << endl;
+    deleteNode(tree, 10);
+    printTree( tree->root, 0 );
+
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
 
     cout << "============delete the value 6===============" << endl;
-    deleteNode(tree, arr[3]);
+    deleteNode(tree, 6);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < size; i++) {
-        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
 
-
-    cout << "============delete the value 5===============" << endl;
-    deleteNode(tree, arr[4]);
+    /*cout << "============delete the value 5===============" << endl;
+    deleteNode(tree, 5);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < size; i++) {
-        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
 
 
     cout << "============delete the value 8===============" << endl;
-    deleteNode(tree, arr[1]);
+    deleteNode(tree, 8);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < size; i++) {
-        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
 
     cout << "============delete the root value 4===============" << endl;
-    deleteNode(tree, arr[5]);
+    deleteNode(tree, 4);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < size; i++) {
-        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
 
-
-    cout << "============insert the root value 6===============" << endl;
-    insert(tree, arr[3]);
-    printTree( tree->root, 0 );
-
     cout << "============insert the root value 4===============" << endl;
-    insert(tree, arr[5]);
+    insert(tree, 4);
     printTree( tree->root, 0 );
 
     cout << "============insert the root value 8===============" << endl;
-    insert(tree, arr[1]);
+    insert(tree, 8);
     printTree( tree->root, 0 );
 
     cout << "============insert the root value 5===============" << endl;
-    insert(tree, arr[4]);
+    insert(tree, 5);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < size; i++) {
-        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
+    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
     }
 
     cout << "============delete the value 1,2,3,4,5,6===============" << endl;
-    for (int k = 8; k >= 3; k--){
-        deleteNode(tree, arr[k]);
+    for (int k = 1; k <= 6; ++k){
+        deleteNode(tree, k);
     }
 
     printTree( tree->root, 0 );
@@ -443,10 +442,10 @@ int main() {
     cout << "============insert some new random values: 22, 4, 97, 35, 11, 47===============" << endl;
     int arr2[] = { 22, 4, 97, 35, 11, 47 };
     for ( int i = 0; i < sizeof(arr2) / sizeof(int); ++i ){
-        insert( tree, createNodeData( arr2[i] , arr2[i]) );
+        insert( tree, arr2[i]);
     }
 
-    printTree( tree->root, 0 );
+    printTree( tree->root, 0 );*/
 
     destroyTree(tree->root);
     free(tree);
