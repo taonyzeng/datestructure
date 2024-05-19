@@ -340,7 +340,7 @@ void removeNode(RBTree *tree, Node *z) {
     if ( z->left != NULL && z->right != NULL ) {
         y = minimum(z->right);
 
-        int diff = y->data->exe_time - z->data->exe_time;
+        int diff = getTotalExeTimeOf(y) - getTotalExeTimeOf(z);
         Node* cur = z->right;
         while (cur != y) {
             cur->sum_left -= diff;
@@ -349,7 +349,9 @@ void removeNode(RBTree *tree, Node *z) {
 
         NodeData* remove_data = z->data;
         z->data = y->data;
+        z->duplicated = y->duplicated;
         y->data = remove_data;
+        y->duplicated = NULL;
 
         removeNode( tree, y );
         return;
@@ -420,7 +422,14 @@ void deleteNode(RBTree *tree, NodeData* data) {
                 newroot->color = z->color;
                 newroot->sum_left = z->sum_left;
                 newroot->left = z->left;
+                if (newroot->left != NULL) {
+                    newroot->left->parent = newroot;
+                }
                 newroot->right = z->right;
+                if (newroot->right != NULL) {
+                    newroot->right->parent = newroot;
+                }
+
                 newroot->parent = z->parent;
                 
                 if (z->parent) {
@@ -536,6 +545,21 @@ int main() {
     for (int i = 0; i < size; i++) {
         printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
     }
+
+    cout << "\n============insert the duplicated value: 41===============" << endl;
+    insert(tree, arr[40]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
+    cout << "\n============remove the single value: 40===============" << endl;
+    deleteNode(tree, arr[39]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
 
     /*cout << "============delete the value 8===============" << endl;
     deleteNode(tree, arr[7]);
