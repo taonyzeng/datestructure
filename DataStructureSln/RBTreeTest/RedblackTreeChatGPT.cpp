@@ -57,6 +57,15 @@ RBTree* createTree() {
     return tree;
 }
 
+int getSumSubTree(Node* root) {
+    if (root == NULL) {
+        return 0;
+    }
+
+    return root->data + root->sum_left + getSumSubTree(root->right);
+
+}
+
 void leftRotate(RBTree *tree, Node *x) {
     Node *y = x->right;
     x->right = y->left;
@@ -77,7 +86,7 @@ void rightRotate(RBTree *tree, Node *x) {
     int new_sum_left = 0;
     if (y->right != NULL) {
         y->right->parent = x;
-        new_sum_left = y->right->data + y->right->sum_left;
+        new_sum_left = getSumSubTree(y->right);
     }
     x->sum_left = new_sum_left;
     y->parent = x->parent;
@@ -359,49 +368,44 @@ int main() {
     cout << "============Test the program from ChatGPT===============" << endl;
 
     RBTree *tree = createTree();
+    int count = 64;
 
     int arr[] = {21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 }; //{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-    for ( int i = 0; i < sizeof(arr) / sizeof(int); ++i )
+    for (int i = count; i >= 1; --i)
         {
-        insert( tree, arr[i]);
-
-        printTree( tree->root, 0 );
-        cout << "===============================================" << "inserted value: "<< arr[i] << "===================\n" << endl;
-        printf("Sum of values less than %d: %d\n", 18, getSumLessThan(tree->root, 18) );
-
-        cout << "===============================================" << endl;
+        insert( tree, i);
         }
 
-    //printTree( tree->root, 0 );
+    printTree( tree->root, 0 );
 
-    /*cout << "===============================================" << endl;
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    cout << "===============================================" << endl;
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i) );
     }
 
     cout << "============delete the value 10===============" << endl;
     deleteNode(tree, 10);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i));
     }
 
     cout << "============delete the value 6===============" << endl;
     deleteNode(tree, 6);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
-    }*/
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i));
+    }
 
-    /*cout << "============delete the value 5===============" << endl;
+    cout << "============delete the value 5===============" << endl;
     deleteNode(tree, 5);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i));
     }
 
 
@@ -409,16 +413,16 @@ int main() {
     deleteNode(tree, 8);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i));
     }
 
     cout << "============delete the root value 4===============" << endl;
     deleteNode(tree, 4);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i));
     }
 
     cout << "============insert the root value 4===============" << endl;
@@ -433,8 +437,8 @@ int main() {
     insert(tree, 5);
     printTree( tree->root, 0 );
 
-    for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
-        printf("Sum of values less than %d: %d\n", arr[i], getSumLessThan(tree->root, arr[i]) );
+    for (int i = 1; i <= count; i++) {
+        printf("Sum of values less than %d: %d\n", i, getSumLessThan(tree->root, i));
     }
 
     cout << "============delete the value 1,2,3,4,5,6===============" << endl;
@@ -444,7 +448,7 @@ int main() {
 
     printTree( tree->root, 0 );
 
-    cout << "============insert some new random values: 22, 4, 97, 35, 11, 47===============" << endl;
+    /*cout << "============insert some new random values: 22, 4, 97, 35, 11, 47===============" << endl;
     int arr2[] = { 22, 4, 97, 35, 11, 47 };
     for ( int i = 0; i < sizeof(arr2) / sizeof(int); ++i ){
         insert( tree, arr2[i]);
