@@ -22,7 +22,7 @@ typedef struct Node {
     NodeData* data;
     int sum_left;
     Color color;
-    struct Node *left, *right, *parent;
+    struct Node *left, *right, *parent, *duplicated;
 } Node;
 
 // Red-Black Tree structure
@@ -39,6 +39,7 @@ void rightRotate(RBTree *tree, Node *x);
 void insertFixup(RBTree *tree, Node *z);
 void insert(RBTree *tree, NodeData* data);
 Node* search(RBTree *tree, NodeData* data);
+Node* searchByKey(RBTree* tree, NodeData* data);
 void transplant(RBTree *tree, Node *u, Node *v);
 Node* minimum(Node *node);
 void deleteFixup(RBTree *tree, Node *x);
@@ -46,7 +47,19 @@ void removeNode(RBTree *tree, Node *z);
 void deleteNode(RBTree *tree, NodeData* data);
 void inorder(Node *node);
 void destroyTree(Node *node);
+int getTotalExeTimeOf(Node* node);
 
+
+int getTotalExeTimeOf(Node* node) {
+    int total = 0;
+    Node* cur = node;
+    while (cur != NULL) {
+        total += cur->data->exe_time;
+        cur = cur->duplicated;
+    }
+
+    return total;
+}
 
 NodeData* createNodeData(int deadline, int exe_time){
     NodeData* data = (NodeData*)malloc(sizeof(NodeData));
@@ -64,6 +77,7 @@ Node* createNode(NodeData* data, Color color, Node* left, Node* right, Node* par
     newNode->right = right;
     newNode->parent = parent;
     newNode->sum_left = 0;
+    newNode->duplicated = NULL;
     return newNode;
 }
 
@@ -157,7 +171,22 @@ void insert(RBTree *tree, NodeData* data) {
     Node *x = tree->root;
     while (x != NULL) {
         y = x;
-        if (z->data->deadline < x->data->deadline) {
+
+        //if found a duplicated deadline, inserted the node
+        //at the end of the linklist
+        if (z->data->deadline == x->data->deadline) {
+            //find the tail the link list;
+            Node* tail = x;
+            while (tail->duplicated != NULL) {
+                tail = tail->duplicated;
+            }
+            //append the new node at the end of the list;
+            tail->duplicated = z;
+            z->color = x->color;
+            z->sum_left = x->sum_left;
+            return;
+        }
+        else if (z->data->deadline < x->data->deadline) {
             x->sum_left += z->data->exe_time;
             x = x->left;
         }
@@ -191,7 +220,7 @@ int getSumLessThan(Node* root, int deadline){
         return getSumLessThan(root->left, deadline);
     }
     else {
-        return  root->data->exe_time + root->sum_left + getSumLessThan(root->right, deadline );
+        return  getTotalExeTimeOf( root ) + root->sum_left + getSumLessThan(root->right, deadline );
     }
 
 }
@@ -200,8 +229,30 @@ int getSumLessThan(Node* root, int deadline){
 Node* search(RBTree *tree, NodeData* data) {
     Node *current = tree->root;
     while (current != NULL && current->data->deadline != data->deadline ) {
-        if (data->deadline < current->data->deadline) current = current->left;
-        else current = current->right;
+        if (data->deadline < current->data->deadline) {
+            current = current->left;
+        } 
+        else {
+            current = current->right;
+        } 
+    }
+
+    while (current && current->data->exe_time != data->exe_time) {
+        current = current->duplicated;
+    }
+
+    return current;
+}
+
+Node* searchByKey(RBTree* tree, NodeData* data) {
+    Node* current = tree->root;
+    while (current != NULL && current->data->deadline != data->deadline) {
+        if (data->deadline < current->data->deadline) {
+            current = current->left;
+        }
+        else {
+            current = current->right;
+        }
     }
 
     return current;
@@ -335,9 +386,61 @@ void removeNode(RBTree *tree, Node *z) {
 }
 
 void deleteNode(RBTree *tree, NodeData* data) {
-    Node *z = search(tree, data);
+    Node *z = searchByKey(tree, data);
     if (z != NULL) {
-        removeNode(tree, z);
+        //if there are duplicated nodes in Z,
+        //we just need to remove duplicated one.
+        if (z->duplicated != NULL) {
+            Node* cur = z;
+            Node* prev = NULL;
+            while (cur && cur->data->exe_time != data->exe_time) {
+                prev = cur;
+                cur = cur->duplicated;
+            }
+
+            //if the target node has been found
+            if (cur != NULL) {
+                //update the sumLeft in all of its parent node.
+                Node* current = z;
+                Node* p = current->parent;
+                while (p != NULL) {
+                    if (p->left == current)
+                    {
+                        p->sum_left -= data->exe_time;
+                    }
+                    current = p;
+                    p = current->parent;
+                }
+            }
+
+            //if the removed node is the head of the linkedlist;
+            if (cur == z) {
+                //copy the data from the removed node.
+                Node* newroot = z->duplicated;
+                newroot->color = z->color;
+                newroot->sum_left = z->sum_left;
+                newroot->left = z->left;
+                newroot->right = z->right;
+                newroot->parent = z->parent;
+                
+                if (z->parent) {
+                    if (z->parent->left = z) {
+                        z->parent->left = newroot;
+                    }
+                    else {
+                        z->parent->right = newroot;
+                    }
+                }
+                //clean up the remove node z;
+                memset( z, sizeof(Node), 0 );
+            }
+            else { //remove the node from the link list;
+                prev->duplicated = cur->duplicated;
+            }
+        }
+        else{
+            removeNode(tree, z);
+        }
     }
 }
 
