@@ -502,7 +502,42 @@ int main() {
         printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
     }
 
-    cout << "============delete the value 8===============" << endl;
+    cout << "\n============insert the duplicated value: 8===============" << endl;
+    insert(tree, arr[7]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
+    cout << "\n============insert the duplicated value: 10===============" << endl;
+    insert(tree, arr[9]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
+    cout << "\n============remove the duplicated value: 8===============" << endl;
+    deleteNode(tree, arr[7]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
+    cout << "\n============remove the duplicated value: 10===============" << endl;
+    deleteNode(tree, arr[9]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
+    cout << "\n============remove the single value: 20===============" << endl;
+    deleteNode(tree, arr[19]);
+
+    for (int i = 0; i < size; i++) {
+        printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    }
+
+    /*cout << "============delete the value 8===============" << endl;
     deleteNode(tree, arr[7]);
     printTree( tree->root, 0 );
 
@@ -539,7 +574,7 @@ int main() {
 
     for (int i = 0; i < size; i++) {
         printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline) );
-    }
+    }*/
 
     destroyTree(tree->root);
     free(tree);
