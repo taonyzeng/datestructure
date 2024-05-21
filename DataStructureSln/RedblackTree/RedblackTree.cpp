@@ -92,7 +92,7 @@ int getSumSubTree(Node* root) {
         return 0;
     }
 
-    return root->data->exe_time + root->sum_left + getSumSubTree(root->right);
+    return getTotalExeTimeOf( root ) + root->sum_left + getSumSubTree(root->right);
 }
 
 void leftRotate(RBTree *tree, Node *x) {
