@@ -440,8 +440,8 @@ void deleteNode(RBTree *tree, NodeData* data) {
                         z->parent->right = newroot;
                     }
                 }
-                //clean up the remove node z;
-                memset( z, sizeof(Node), 0 );
+                //clean up the removed node z;
+                memset( z, 0,  sizeof(Node));
             }
             else { //remove the node from the link list;
                 prev->duplicated = cur->duplicated;
