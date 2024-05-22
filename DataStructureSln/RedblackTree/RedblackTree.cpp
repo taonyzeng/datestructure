@@ -389,68 +389,78 @@ void removeNode(RBTree *tree, Node *z) {
 
 void deleteNode(RBTree *tree, NodeData* data) {
     Node *z = searchByKey(tree, data);
-    if (z != NULL) {
-        //if there are duplicated nodes in Z,
-        //we just need to remove duplicated one.
-        if (z->duplicated != NULL) {
-            Node* cur = z;
-            Node* prev = NULL;
-            while (cur && cur->data->exe_time != data->exe_time) {
-                prev = cur;
-                cur = cur->duplicated;
-            }
 
-            //if the target node has been found
-            if (cur != NULL) {
-                //update the sumLeft in all of its parent node.
-                Node* current = z;
-                Node* p = current->parent;
-                while (p != NULL) {
-                    if (p->left == current)
-                    {
-                        p->sum_left -= data->exe_time;
-                    }
-                    current = p;
-                    p = current->parent;
-                }
-            }
+    if (z == NULL) {
+        return;
+    }
 
-            //if the removed node is the head of the linkedlist;
-            if (cur == z) {
-                //copy the data from the removed node.
-                Node* newroot = z->duplicated;
-                newroot->color = z->color;
-                newroot->sum_left = z->sum_left;
-                newroot->left = z->left;
-                if (newroot->left != NULL) {
-                    newroot->left->parent = newroot;
-                }
-                newroot->right = z->right;
-                if (newroot->right != NULL) {
-                    newroot->right->parent = newroot;
-                }
+    //if there are duplicated nodes in Z,
+    //we just need to remove duplicated one.
+    if (z->duplicated != NULL) {
+        Node* cur = z;
+        Node* prev = NULL;
+        while (cur && cur->data->exe_time != data->exe_time) {
+            prev = cur;
+            cur = cur->duplicated;
+        }
 
-                newroot->parent = z->parent;
-                
-                if (z->parent) {
-                    if (z->parent->left = z) {
-                        z->parent->left = newroot;
-                    }
-                    else {
-                        z->parent->right = newroot;
-                    }
+        //if the target node has been found
+        if (cur != NULL) {
+            //update the sumLeft in all of its parent node.
+            Node* current = z;
+            Node* p = current->parent;
+            while (p != NULL) {
+                if (p->left == current)
+                {
+                    p->sum_left -= data->exe_time;
                 }
-                //clean up the removed node z;
-                memset( z, 0,  sizeof(Node));
-            }
-            else { //remove the node from the link list;
-                prev->duplicated = cur->duplicated;
+                current = p;
+                p = current->parent;
             }
         }
         else{
+            return;
+        }
+
+        //if the removed node is the head of the linkedlist;
+        if (cur == z) {
+            //copy the data from the removed node.
+            Node* newroot = z->duplicated;
+            newroot->color = z->color;
+            newroot->sum_left = z->sum_left;
+            newroot->left = z->left;
+            if (newroot->left != NULL) {
+                newroot->left->parent = newroot;
+            }
+            newroot->right = z->right;
+            if (newroot->right != NULL) {
+                newroot->right->parent = newroot;
+            }
+
+            newroot->parent = z->parent;
+                
+            if (z->parent) {
+                if (z->parent->left == z) {
+                    z->parent->left = newroot;
+                }
+                else {
+                    z->parent->right = newroot;
+                }
+            }
+            //clean up the removed node z;
+            memset( z, 0,  sizeof(Node));
+        }
+        else { //remove the node from the link list;
+            prev->duplicated = cur->duplicated;
+        }
+    }
+    else{
+
+        if (z->data->exe_time == data->exe_time) {
             removeNode(tree, z);
         }
     }
+    
 }
 
 void inorder(Node *node) {
@@ -546,8 +556,8 @@ int main() {
         printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
     }
 
-    cout << "\n============insert the duplicated value: 41===============" << endl;
-    insert(tree, arr[40]);
+    cout << "\n============insert the duplicated value: {41, 35}===============" << endl;
+    insert(tree, createNodeData(41, 35));
 
     for (int i = 0; i < size; i++) {
         printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
@@ -559,6 +569,17 @@ int main() {
     for (int i = 0; i < size; i++) {
         printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
     }
+
+    printTree(tree->root, 0);
+
+    cout << "\n============delete the duplicated value: {41, 41}===============" << endl;
+    deleteNode( tree, createNodeData(41, 41));
+
+    printTree(tree->root, 0);
+
+    //for (int i = 0; i < size; i++) {
+    //    printf("Sum of values less than %d: %d\n", arr[i]->deadline, getSumLessThan(tree->root, arr[i]->deadline));
+    //}
 
 
     /*cout << "============delete the value 8===============" << endl;
