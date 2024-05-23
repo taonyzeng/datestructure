@@ -337,6 +337,8 @@ void removeNode(RBTree *tree, Node *z) {
     Node *x = NULL;
     Color y_original_color = y->color;
 
+    //if the removed node has both left and right children,
+    //then change the node with its successor.
     if ( z->left != NULL && z->right != NULL ) {
         y = minimum(z->right);
 
@@ -357,20 +359,8 @@ void removeNode(RBTree *tree, Node *z) {
         return;
     }
 
-    //now the node to be removed has only no children
-    //or only one child, update the sum_left value of
-    //all the node along the path from root to z.
-    Node* current = z;
-    Node* p = current->parent;
-    while (p != NULL) {
-        if (p->left == current)
-        {
-            p->sum_left -= z->data->exe_time;
-        }
-        current = p;
-        p = current->parent;
-    }
-
+    //now the node to be removed has no children
+    //or only one child, it is safe to be removed.
     if (z->left == NULL) {
         x = z->right;
         transplant(tree, z, z->right);
@@ -388,7 +378,19 @@ void removeNode(RBTree *tree, Node *z) {
 }
 
 void deleteNode(RBTree *tree, NodeData* data) {
-    Node *z = searchByKey(tree, data);
+
+    //find the target node z, and update the sumleft 
+    //during the search process.
+    Node* z = tree->root;
+    while (z != NULL && z->data->deadline != data->deadline) {
+        if (data->deadline < z->data->deadline) {
+            z->sum_left -= data->exe_time;
+            z = z->left;
+        }
+        else {
+            z = z->right;
+        }
+    }
 
     if (z == NULL) {
         return;
@@ -402,24 +404,6 @@ void deleteNode(RBTree *tree, NodeData* data) {
         while (cur && cur->data->exe_time != data->exe_time) {
             prev = cur;
             cur = cur->duplicated;
-        }
-
-        //if the target node has been found
-        if (cur != NULL) {
-            //update the sumLeft in all of its parent node.
-            Node* current = z;
-            Node* p = current->parent;
-            while (p != NULL) {
-                if (p->left == current)
-                {
-                    p->sum_left -= data->exe_time;
-                }
-                current = p;
-                p = current->parent;
-            }
-        }
-        else{
-            return;
         }
 
         //if the removed node is the head of the linkedlist;
