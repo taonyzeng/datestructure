@@ -342,10 +342,10 @@ void removeNode(RBTree *tree, Node *z) {
     if ( z->left != NULL && z->right != NULL ) {
         y = minimum(z->right);
 
-        int diff = getTotalExeTimeOf(y) - getTotalExeTimeOf(z);
+        int exe_time_y = getTotalExeTimeOf(y);
         Node* cur = z->right;
         while (cur != y) {
-            cur->sum_left -= diff;
+            cur->sum_left -= exe_time_y;
             cur = cur->left;
         }
 
